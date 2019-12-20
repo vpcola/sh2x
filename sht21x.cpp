@@ -50,18 +50,24 @@ static esp_err_t sht21_cmd_bytes(i2c_port_t port, uint8_t reg, uint8_t *buff)
   i2c_cmd_link_delete(cmd);
 
   if (rc != ESP_OK) return rc;
-  // After sending the target register, now read 3 bytes from the device
-  cmd = i2c_cmd_link_create();
-  i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (SHT21_ADDR << 1) | I2C_MASTER_READ, ACK_CHECK_EN );
-  // First read the first 2 bytes
-  i2c_master_read(cmd, buff, 2, I2C_MASTER_ACK);
-  // Read the last byte (with NACK value)
-  i2c_master_read_byte(cmd, buff+2, I2C_MASTER_LAST_NACK);
-  i2c_master_stop(cmd);
-  // Finalize the transaction
-  rc = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
-  i2c_cmd_link_delete(cmd);
+  uint8_t timeout = 0;
+  do {
+      vTaskDelay(10 / portTICK_RATE_MS);
+      // After sending the target register, now read 3 bytes from the device
+      cmd = i2c_cmd_link_create();
+      i2c_master_start(cmd);
+      i2c_master_write_byte(cmd, (SHT21_ADDR << 1) | I2C_MASTER_READ, ACK_CHECK_EN );
+      // First read the first 2 bytes
+      i2c_master_read(cmd, buff, 2, I2C_MASTER_ACK);
+      // Read the last byte (with NACK value)
+      i2c_master_read_byte(cmd, buff+2, I2C_MASTER_LAST_NACK);
+      i2c_master_stop(cmd);
+      // Finalize the transaction
+      rc = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_RATE_MS);
+      i2c_cmd_link_delete(cmd);
+
+      timeout++;
+  }  while((rc != ESP_OK) && (timeout < 20));
 
   return rc;
 }
