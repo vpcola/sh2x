@@ -4,7 +4,9 @@
 #include <freertos/FreeRTOS.h>
 #include <driver/gpio.h>
 #include <driver/i2c.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 // I2C slave address (7bit slave address)
 #define SHT21_ADDR 0x40
 // Register map
@@ -21,5 +23,9 @@
 esp_err_t sht21_readreg(i2c_port_t port, uint8_t *ans); 
 esp_err_t sht21_humidity(i2c_port_t port, float * humid); 
 esp_err_t sht21_temperature(i2c_port_t port, float * temp); 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
